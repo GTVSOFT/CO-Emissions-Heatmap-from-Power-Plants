@@ -1,0 +1,26 @@
+import pandas as pd
+import folium
+from folium.plugins import HeatMap
+import matplotlib.pyplot as plt
+
+# Load the data
+df = pd.read_csv('data/power_plants.csv')
+
+# Check and clean data
+df = df.dropna(subset=['latitude', 'longitude', 'co2_emissions_tons'])
+
+# Normalize emissions for heat intensity (optional)
+df['intensity'] = df['co2_emissions_tons'] / df['co2_emissions_tons'].max()
+
+# Create map centered on data
+center_lat = df['latitude'].mean()
+center_lon = df['longitude'].mean()
+m = folium.Map(location=[center_lat, center_lon], zoom_start=6, tiles='CartoDB dark_matter')
+
+# Prepare heatmap data: [lat, lon, weight]
+heat_data = [[row['latitude'], row['longitude'], row['intensity']] for index, row in df.iterrows()]
+HeatMap(heat_data, radius=15, blur=10, max_zoom=10).add_to(m)
+
+# Save map to HTML
+m.save('figures/co2_emissions_heatmap.html')
+print("CO2 heatmap saved as 'figures/co2_emissions_heatmap.html'")
